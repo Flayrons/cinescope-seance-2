@@ -9,6 +9,8 @@ const films = [
   { id: 3, title: "Orbite 9", genre: "Science-fiction", time: "21 h 00", available: true, poster: posterOrbite },
 ];
 
+type Film = (typeof films)[number];
+
 export default function App() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -25,25 +27,38 @@ export default function App() {
   // Un déclencheur par film, indexé par identifiant : à la fermeture on rend
   // le focus au bouton réellement activé, et non au premier de la grille.
   const triggerRefs = useRef(new Map<number, HTMLButtonElement>());
+  const triggerToRestore = useRef<number | null>(null);
 
-  // Le `<dialog>` natif n'est modal que s'il est ouvert via `showModal()` :
-  // c'est lui qui expose le rôle `dialog`, rend l'arrière-plan inerte et
-  // câble la touche Escape. On synchronise donc l'élément avec l'état React.
   const dialogRef = useRef<HTMLDialogElement>(null);
+
+  const openBooking = (film: Film) => {
+    triggerToRestore.current = film.id;
+    setSelected(film.title);
+  };
+
+  // L'état React est la seule source de vérité : toutes les voies de
+  // fermeture (Escape, croix, « Revenir aux films ») repassent par ici.
+  const closeBooking = () => setSelected(null);
+
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog || dialog.open) return;
-    dialog.showModal();
-    // On place le focus sur le conteneur nommé plutôt que sur le premier
-    // bouton : le dialogue et son titre sont annoncés avant les commandes.
-    dialog.focus();
+    if (dialog) {
+      // Le `<dialog>` n'est modal que s'il est ouvert via `showModal()` : c'est
+      // cet appel qui expose le rôle `dialog`, rend l'arrière-plan inerte et
+      // câble la touche Escape.
+      if (!dialog.open) dialog.showModal();
+      // On place le focus sur le conteneur nommé plutôt que sur le premier
+      // bouton : le dialogue et son titre sont annoncés avant les commandes.
+      dialog.focus();
+      return;
+    }
+    // Le dialogue vient d'être démonté : l'arrière-plan n'est plus inerte, on
+    // peut enfin rendre le focus au déclencheur mémorisé à l'ouverture.
+    const filmId = triggerToRestore.current;
+    if (filmId === null) return;
+    triggerToRestore.current = null;
+    triggerRefs.current.get(filmId)?.focus();
   }, [selectedFilm]);
-
-  const handleDialogClose = () => {
-    const trigger = selectedFilm ? triggerRefs.current.get(selectedFilm.id) : undefined;
-    setSelected(null);
-    trigger?.focus();
-  };
 
   return (
     <>
@@ -84,7 +99,7 @@ export default function App() {
                           if (node) triggerRefs.current.set(film.id, node);
                           else triggerRefs.current.delete(film.id);
                         }}
-                        onClick={() => setSelected(film.title)}>
+                        onClick={() => openBooking(film)}>
                         Réserver {film.title}
                       </button>
                       <button type="button" className="favorite" aria-pressed={isFavorite}
@@ -105,12 +120,18 @@ export default function App() {
         </section>
         {selectedFilm && (
           <dialog className="modal" ref={dialogRef} tabIndex={-1}
-            aria-labelledby="booking-dialog-title" onClose={handleDialogClose}>
+            aria-labelledby="booking-dialog-title"
+            onCancel={(event) => {
+              // Escape : on empêche la fermeture native pour que l'état React
+              // reste la seule source de vérité et pilote le démontage.
+              event.preventDefault();
+              closeBooking();
+            }}>
             <div className="dialog-heading">
               <h2 id="booking-dialog-title">Réserver {selectedFilm.title}</h2>
               <button type="button" className="close"
                 aria-label={"Fermer la réservation : " + selectedFilm.title}
-                onClick={() => dialogRef.current?.close()}>
+                onClick={closeBooking}>
                 <span aria-hidden="true">×</span>
               </button>
             </div>
@@ -119,7 +140,7 @@ export default function App() {
               {selectedFilm.available ? "Places disponibles" : "Séance complète"}
             </p>
             <p>Consultez la séance et sa disponibilité avant de revenir au programme.</p>
-            <button className="dialog-action" type="button" onClick={() => dialogRef.current?.close()}>Revenir aux films</button>
+            <button className="dialog-action" type="button" onClick={closeBooking}>Revenir aux films</button>
           </dialog>
         )}
       </main>
