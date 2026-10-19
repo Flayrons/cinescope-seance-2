@@ -7,7 +7,9 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const selectedFilm = films.find((film) => film.title === selected);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [confirmation, setConfirmation] = useState<string | null>(null);
+  // `token` ne sert pas à l'affichage : il force le remplacement du nœud de
+  // texte pour que deux confirmations identiques soient bien annoncées.
+  const [confirmation, setConfirmation] = useState<{ text: string; token: number } | null>(null);
   const filteredFilms = useMemo(
     () => films.filter((film) => film.title.toLowerCase().includes(query.toLowerCase())),
     [query],
@@ -31,9 +33,14 @@ export default function App() {
   // ne réserve rien et laisse donc le résultat précédent intact.
   const closeBooking = () => setSelected(null);
 
-  // Seule la validation explicite du dialogue produit une réservation.
+  // Seule la validation explicite du dialogue produit une réservation. Le
+  // résultat est annoncé par la région `role="status"`, sans que le focus
+  // quitte le déclencheur auquel la fermeture vient de le rendre.
   const confirmBooking = (film: Film) => {
-    setConfirmation("Réservation confirmée : " + film.title + ", séance de " + film.time + ".");
+    setConfirmation((previous) => ({
+      text: "Réservation confirmée : " + film.title + ", séance de " + film.time + ".",
+      token: (previous?.token ?? 0) + 1,
+    }));
     closeBooking();
   };
 
@@ -66,7 +73,15 @@ export default function App() {
           <input id="film-search" className="search" type="search" value={query}
             onChange={(event) => setQuery(event.target.value)} />
         </div>
-        {confirmation && <p className="selection">{confirmation}</p>}
+        {/* Région d'annonce présente dès le premier rendu, et volontairement
+            vide : une live region insérée en même temps que son contenu
+            n'est pas surveillée par les technologies d'assistance, donc pas
+            annoncée. Seul son contenu change ensuite. */}
+        <div className="status-region" role="status">
+          {confirmation && (
+            <p className="selection" key={confirmation.token}>{confirmation.text}</p>
+          )}
+        </div>
         <section id="programme" aria-labelledby="programme-title">
           <h2 id="programme-title">Programme</h2>
           <div className="film-grid">
