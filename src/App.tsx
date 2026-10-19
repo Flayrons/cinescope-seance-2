@@ -22,6 +22,10 @@ export default function App() {
     setFavorites((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   };
 
+  // Un déclencheur par film, indexé par identifiant : à la fermeture on rend
+  // le focus au bouton réellement activé, et non au premier de la grille.
+  const triggerRefs = useRef(new Map<number, HTMLButtonElement>());
+
   // Le `<dialog>` natif n'est modal que s'il est ouvert via `showModal()` :
   // c'est lui qui expose le rôle `dialog`, rend l'arrière-plan inerte et
   // câble la touche Escape. On synchronise donc l'élément avec l'état React.
@@ -34,6 +38,12 @@ export default function App() {
     // bouton : le dialogue et son titre sont annoncés avant les commandes.
     dialog.focus();
   }, [selectedFilm]);
+
+  const handleDialogClose = () => {
+    const trigger = selectedFilm ? triggerRefs.current.get(selectedFilm.id) : undefined;
+    setSelected(null);
+    trigger?.focus();
+  };
 
   return (
     <>
@@ -69,7 +79,12 @@ export default function App() {
                     <h3>{film.title}</h3>
                     <p>{film.genre} · {film.time}</p>
                     <div className="actions">
-                      <button type="button" className="booking-trigger" onClick={() => setSelected(film.title)}>
+                      <button type="button" className="booking-trigger"
+                        ref={(node) => {
+                          if (node) triggerRefs.current.set(film.id, node);
+                          else triggerRefs.current.delete(film.id);
+                        }}
+                        onClick={() => setSelected(film.title)}>
                         Réserver {film.title}
                       </button>
                       <button type="button" className="favorite" aria-pressed={isFavorite}
@@ -90,7 +105,7 @@ export default function App() {
         </section>
         {selectedFilm && (
           <dialog className="modal" ref={dialogRef} tabIndex={-1}
-            aria-labelledby="booking-dialog-title" onClose={() => setSelected(null)}>
+            aria-labelledby="booking-dialog-title" onClose={handleDialogClose}>
             <div className="dialog-heading">
               <h2 id="booking-dialog-title">Réserver {selectedFilm.title}</h2>
               <button type="button" className="close"
