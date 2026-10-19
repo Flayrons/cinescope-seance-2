@@ -30,6 +30,9 @@ export default function App() {
     const dialog = dialogRef.current;
     if (!dialog || dialog.open) return;
     dialog.showModal();
+    // On place le focus sur le conteneur nommé plutôt que sur le premier
+    // bouton : le dialogue et son titre sont annoncés avant les commandes.
+    dialog.focus();
   }, [selectedFilm]);
 
   return (
@@ -86,8 +89,8 @@ export default function App() {
           <p>Le cinéma ouvre trente minutes avant la première séance.</p>
         </section>
         {selectedFilm && (
-          <dialog className="modal" ref={dialogRef} aria-labelledby="booking-dialog-title"
-            onClose={() => setSelected(null)}>
+          <dialog className="modal" ref={dialogRef} tabIndex={-1}
+            aria-labelledby="booking-dialog-title" onClose={() => setSelected(null)}>
             <div className="dialog-heading">
               <h2 id="booking-dialog-title">Réserver {selectedFilm.title}</h2>
               <button type="button" className="close"
