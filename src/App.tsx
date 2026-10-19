@@ -56,7 +56,9 @@ export default function App() {
                     <h3>{film.title}</h3>
                     <p>{film.genre} · {film.time}</p>
                     <div className="actions">
-                      <div className="booking-trigger fake-button" onClick={() => setSelected(film.title)}>Réserver {film.title}</div>
+                      <button type="button" className="booking-trigger" onClick={() => setSelected(film.title)}>
+                        Réserver {film.title}
+                      </button>
                       <button type="button" className="favorite" aria-pressed={isFavorite}
                         aria-label={"Favori : " + film.title} onClick={() => toggleFavorite(film.id)}>
                         <span aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
