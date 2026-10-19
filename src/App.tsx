@@ -7,6 +7,7 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const selectedFilm = films.find((film) => film.title === selected);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [confirmation, setConfirmation] = useState<string | null>(null);
   const filteredFilms = useMemo(
     () => films.filter((film) => film.title.toLowerCase().includes(query.toLowerCase())),
     [query],
@@ -26,8 +27,15 @@ export default function App() {
   };
 
   // L'état React est la seule source de vérité : toutes les voies de
-  // fermeture (Escape, croix, « Revenir aux films ») repassent par ici.
+  // fermeture (Escape, croix, « Annuler ») repassent par ici. Une fermeture
+  // ne réserve rien et laisse donc le résultat précédent intact.
   const closeBooking = () => setSelected(null);
+
+  // Seule la validation explicite du dialogue produit une réservation.
+  const confirmBooking = (film: Film) => {
+    setConfirmation("Réservation confirmée : " + film.title + ", séance de " + film.time + ".");
+    closeBooking();
+  };
 
   useEffect(() => {
     if (selectedFilm) return;
@@ -58,6 +66,7 @@ export default function App() {
           <input id="film-search" className="search" type="search" value={query}
             onChange={(event) => setQuery(event.target.value)} />
         </div>
+        {confirmation && <p className="selection">{confirmation}</p>}
         <section id="programme" aria-labelledby="programme-title">
           <h2 id="programme-title">Programme</h2>
           <div className="film-grid">
@@ -98,7 +107,8 @@ export default function App() {
           <p>Le cinéma ouvre trente minutes avant la première séance.</p>
         </section>
         {selectedFilm && (
-          <BookingDialog key={selectedFilm.id} film={selectedFilm} onClose={closeBooking} />
+          <BookingDialog key={selectedFilm.id} film={selectedFilm}
+            onClose={closeBooking} onConfirm={confirmBooking} />
         )}
       </main>
     </>

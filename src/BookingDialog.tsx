@@ -4,11 +4,13 @@ import type { Film } from "./films";
 type BookingDialogProps = {
   /** Film dont on affiche la séance ; le composant est monté/démonté avec lui. */
   film: Film;
-  /** Appelé pour toute sortie du dialogue : Escape, croix, bouton de retour. */
+  /** Sortie sans réserver : Escape, croix, « Annuler », « Revenir aux films ». */
   onClose: () => void;
+  /** Validation explicite de la séance ; jamais déclenchée par une fermeture. */
+  onConfirm: (film: Film) => void;
 };
 
-export default function BookingDialog({ film, onClose }: BookingDialogProps) {
+export default function BookingDialog({ film, onClose, onConfirm }: BookingDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   // `useId` garantit un identifiant unique et stable : le nom accessible du
   // dialogue reste relié à son titre visible, même si plusieurs instances du
@@ -46,8 +48,31 @@ export default function BookingDialog({ film, onClose }: BookingDialogProps) {
       <p className={"availability " + (film.available ? "available" : "unavailable")}>
         {film.available ? "Places disponibles" : "Séance complète"}
       </p>
-      <p>Consultez la séance et sa disponibilité avant de revenir au programme.</p>
-      <button className="dialog-action" type="button" onClick={onClose}>Revenir aux films</button>
+      <p>
+        {film.available
+          ? "Confirmez pour retenir une place pour cette séance, ou annulez pour revenir au programme."
+          : "Cette séance est complète : aucune place ne peut être retenue."}
+      </p>
+      {/* Les noms accessibles reprennent le libellé visible puis le complètent
+          avec le film et l'horaire : une commande parcourue hors contexte
+          reste compréhensible, sans trahir le texte affiché. */}
+      <div className="dialog-actions">
+        {film.available ? (
+          <>
+            <button type="button" className="dialog-action"
+              aria-label={"Confirmer la réservation : " + film.title + ", séance de " + film.time}
+              onClick={() => onConfirm(film)}>
+              Confirmer la réservation
+            </button>
+            <button type="button" className="dialog-action dialog-action--secondary"
+              aria-label={"Annuler la réservation : " + film.title} onClick={onClose}>
+              Annuler
+            </button>
+          </>
+        ) : (
+          <button type="button" className="dialog-action" onClick={onClose}>Revenir aux films</button>
+        )}
+      </div>
     </dialog>
   );
 }
