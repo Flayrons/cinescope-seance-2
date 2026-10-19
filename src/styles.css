@@ -35,7 +35,6 @@ button, input { font: inherit; }
 /* Même présentation dans les deux versions, comportements à corriger en TP. */
 dialog, .modal { width: min(36rem, calc(100% - 2rem)); max-height: 90vh; overflow: auto; padding: 1.5rem; border: 0; border-radius: .8rem; color: inherit; background: white; box-shadow: 0 16px 60px #11182755; }
 dialog::backdrop { background: #111827b8; }
-.backdrop { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: #111827b8; }
 .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .dialog-heading h2 { margin: 0 0 1rem; line-height: 1.25; }
 .close { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 2.75rem; min-height: 2.75rem; padding: .3rem .7rem; border: 0; border-radius: .4rem; background: #252d61; color: white; font-size: 1.5rem; cursor: pointer; }
