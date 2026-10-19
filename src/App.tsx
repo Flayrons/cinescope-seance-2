@@ -86,9 +86,10 @@ export default function App() {
           <p>Le cinéma ouvre trente minutes avant la première séance.</p>
         </section>
         {selectedFilm && (
-          <dialog className="modal" ref={dialogRef} onClose={() => setSelected(null)}>
+          <dialog className="modal" ref={dialogRef} aria-labelledby="booking-dialog-title"
+            onClose={() => setSelected(null)}>
             <div className="dialog-heading">
-              <h2>Réserver {selectedFilm.title}</h2>
+              <h2 id="booking-dialog-title">Réserver {selectedFilm.title}</h2>
               <span className="close" onClick={() => dialogRef.current?.close()}>×</span>
             </div>
             <p>{selectedFilm.genre} · Séance de {selectedFilm.time}</p>
