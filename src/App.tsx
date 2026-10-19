@@ -90,7 +90,11 @@ export default function App() {
             onClose={() => setSelected(null)}>
             <div className="dialog-heading">
               <h2 id="booking-dialog-title">Réserver {selectedFilm.title}</h2>
-              <span className="close" onClick={() => dialogRef.current?.close()}>×</span>
+              <button type="button" className="close"
+                aria-label={"Fermer la réservation : " + selectedFilm.title}
+                onClick={() => dialogRef.current?.close()}>
+                <span aria-hidden="true">×</span>
+              </button>
             </div>
             <p>{selectedFilm.genre} · Séance de {selectedFilm.time}</p>
             <p className={"availability " + (selectedFilm.available ? "available" : "unavailable")}>
